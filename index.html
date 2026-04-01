@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAGMI Chainlink Championship Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
+    --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
+    --text: #f0efe8; --muted: #6b6a72; --accent: #375bd2;
+    --green: #3dd68c; --red: #f0736a; --gold: #f5c842;
+    --mono: 'Space Mono', monospace; --sans: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; padding: 2rem 1rem 4rem; max-width: 720px; margin: 0 auto; }
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; }
+  .link-logo { width: 48px; height: 48px; background: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 12px; color: #fff; flex-shrink: 0; }
+  .header-text h1 { font-family: var(--mono); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
+  .header-text p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .champ-banner { display: flex; justify-content: center; margin-bottom: 1.5rem; }
+  .champ-banner img { width: 160px; height: 160px; object-fit: cover; border-radius: 16px; border: 1px solid var(--border-bright); }
+  .countdown-card { background: var(--surface); border: 1px solid var(--border-bright); border-radius: 16px; padding: 1.1rem 1.5rem; margin-bottom: 1.5rem; }
+  .countdown-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .countdown-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .countdown-unit { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px; text-align: center; }
+  .countdown-num { font-family: var(--mono); font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1; }
+  .countdown-unit-label { font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
+  .price-card { background: var(--surface); border: 1px solid var(--border-bright); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .price-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+  .price-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .price-value { font-family: var(--mono); font-size: 2.2rem; font-weight: 700; letter-spacing: -0.03em; color: var(--text); line-height: 1; }
+  .price-change { font-family: var(--mono); font-size: 12px; margin-top: 6px; }
+  .price-change.up { color: var(--green); } .price-change.down { color: var(--red); }
+  .pulse-row { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
+  .chart-wrap { position: relative; width: 100%; height: 80px; }
+  .section-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; padding-left: 2px; }
+  .winner-banner { background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.35); border-radius: 12px; padding: 0.9rem 1.25rem; margin-bottom: 1.5rem; display: none; align-items: center; gap: 12px; }
+  .winner-crown { font-size: 24px; }
+  .winner-text { font-family: var(--mono); font-size: 13px; color: var(--gold); }
+  .winner-text span { font-weight: 700; }
+  .share-btn { margin-left: auto; background: rgba(255,255,255,0.06); border: 1px solid var(--border-bright); color: var(--muted); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+  .share-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-width: 520px; }
+  thead tr { background: var(--surface2); border-bottom: 1px solid var(--border-bright); }
+  th { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 9px 12px; text-align: left; font-weight: 400; white-space: nowrap; }
+  th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr.winner-row { background: rgba(245,200,66,0.06); }
+  td { padding: 10px 12px; font-size: 13px; }
+  .td-name { font-weight: 500; color: var(--text); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .td-mono { font-family: var(--mono); font-size: 12px; text-align: right; white-space: nowrap; }
+  .color-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .rank-arrow { font-size: 10px; font-family: var(--mono); flex-shrink: 0; }
+  .rank-up { color: var(--green); }
+  .rank-down { color: var(--red); }
+  .rank-same { color: var(--muted); }
+  .crown { font-size: 13px; }
+  .error-banner { background: rgba(240,115,106,0.08); border: 1px solid rgba(240,115,106,0.2); color: var(--red); padding: 0.7rem 1.1rem; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 1.25rem; display: none; }
+  .footer { margin-top: 1.5rem; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; text-align: center; }
+  .skeleton { background: rgba(255,255,255,0.08); border-radius: 3px; color: transparent; animation: shimmer 1.4s ease-in-out infinite; user-select: none; }
+  @keyframes shimmer { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+  .legend { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .confetti-piece { position: fixed; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 9999; animation: confetti-fall linear forwards; }
+  @keyframes confetti-fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+  .copied-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border-bright); color: var(--text); font-family: var(--mono); font-size: 11px; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
+  .copied-toast.show { opacity: 1; }
+  @media (max-width: 500px) {
+    .price-value { font-size: 1.7rem; }
+    .countdown-num { font-size: 1.3rem; }
+    .header-text h1 { font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="link-logo">LINK</div>
+  <div class="header-text">
+    <h1>WAGMI Chainlink Championship Leaderboard</h1>
+    <p>Live price · Prediction leaderboard · End of 2026</p>
+  </div>
+</div>
+
+<div class="champ-banner">
+  <img src="Apu_the_Frog_with_trophy_triumph.png" alt="WAGMI Champion" />
+</div>
+
+<div class="countdown-card">
+  <div class="countdown-label">Time remaining — End of 2026</div>
+  <div class="countdown-grid">
+    <div class="countdown-unit"><div class="countdown-num" id="cd-days">—</div><div class="countdown-unit-label">Days</div></div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-hours">—</div><div class="countdown-unit-label">Hours</div></div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-mins">—</div><div class="countdown-unit-label">Minutes</div></div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-secs">—</div><div class="countdown-unit-label">Seconds</div></div>
+  </div>
+</div>
+
+<div class="winner-banner" id="winner-banner">
+  <span class="winner-crown">🏆</span>
+  <div class="winner-text" id="winner-text"></div>
+  <button class="share-btn" onclick="shareLink()">Share</button>
+</div>
+
+<div class="error-banner" id="error-banner">Could not fetch price. Retrying shortly...</div>
+
+<div class="price-card">
+  <div class="price-top">
+    <div>
+      <div class="price-label">Current price</div>
+      <div class="price-value" id="price">$——</div>
+      <div class="price-change" id="change">— (24h)</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="pulse-row" style="justify-content:flex-end;">
+        <div class="pulse-dot"></div>
+        <span>Live · 30s refresh</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:5px;" id="last-updated">—</div>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <canvas id="sparkline"></canvas>
+  </div>
+</div>
+
+<div class="section-label">Price predictions</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#3dd68c;"></div> Closest to current price</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f0736a;"></div> Furthest from current price</div>
+  <div class="legend-item" style="gap:4px;">
+    <span style="font-family:monospace;font-size:10px;color:#3dd68c;">▲</span>
+    <span style="font-family:monospace;font-size:10px;color:#f0736a;">▼</span>
+    Rank change
+  </div>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Target</th>
+      <th>$ gap</th>
+      <th>% needed</th>
+    </tr>
+  </thead>
+  <tbody id="predictions-body">
+    <tr><td><span class="skeleton">Loading...</span></td><td><span class="skeleton">$——</span></td><td><span class="skeleton">$——</span></td><td><span class="skeleton">——%</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="footer" style="margin-top:1.25rem;">Data via CoinGecko &nbsp;·&nbsp; Last updated: <span id="footer-updated">—</span></div>
+<div class="copied-toast" id="toast">Link copied!</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const predictions = [
+  { name: "Mirela", target: 13.00 }, { name: "Tenchi", target: 11.50 },
+  { name: "03330", target: 88.00 }, { name: "Y", target: 68.00 },
+  { name: "Jimmy Russ", target: 1000.00 }, { name: "Genghis", target: 60.00 },
+  { name: "Superior Andrew", target: 11.00 }, { name: "Sean", target: 20.00 },
+  { name: "📦", target: 38.00 }, { name: "Aim", target: 10.00 },
+  { name: "Jesse", target: 8.00 }, { name: "Cipher", target: 22.14 },
+  { name: "Web5N", target: 69.00 }, { name: "Ticklemissle", target: 0.10 },
+  { name: "Dr Lst", target: 9.00 }, { name: "Rolando", target: 14.88 },
+  { name: "Jems", target: 5.00 }, { name: "Ivan", target: 20.00 },
+  { name: "Jeff Winger", target: 125.00 }, { name: "BB", target: 16.00 },
+  { name: "Shinobi", target: 2.00 }, { name: "Brietarded Gratin'", target: 1001.00 },
+  { name: "Ploutus", target: 15.32 }, { name: "Kevin", target: 70.00 },
+  { name: "Goychka Frogdanoff", target: 13.56 }, { name: "Enemy of the cube", target: 150.00 },
+  { name: "JP", target: 7.00 }, { name: "Brunowilly", target: 59.16 },
+  { name: "Pete", target: 58.00 }, { name: "Eric", target: 18.00 },
+  { name: "Snu snu", target: 75.00 }, { name: "JF", target: 49.00 },
+  { name: "Drake", target: 63.50 }, { name: "Lon hu", target: 15.00 },
+];
+
+let priceHistory = [];
+let previousRanks = {};
+let sparkChart = null;
+let confettiFired = false;
+
+function interpolateColor(t) {
+  const r = Math.round(0x3d + t * (0xf0 - 0x3d));
+  const g = Math.round(0xd6 + t * (0x73 - 0xd6));
+  const b = Math.round(0x8c + t * (0x6a - 0x8c));
+  return `rgb(${r},${g},${b})`;
+}
+
+function updateCountdown() {
+  const diff = new Date('2027-01-01T00:00:00') - new Date();
+  if (diff <= 0) { ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => document.getElementById(id).textContent = '00'); return; }
+  document.getElementById('cd-days').textContent = Math.floor(diff / 86400000);
+  document.getElementById('cd-hours').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2,'0');
+  document.getElementById('cd-mins').textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+  document.getElementById('cd-secs').textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+function initSparkline() {
+  const ctx = document.getElementById('sparkline').getContext('2d');
+  sparkChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        borderColor: '#375bd2',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.4,
+        fill: true,
+        backgroundColor: 'rgba(55,91,210,0.08)',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => '$' + ctx.parsed.y.toFixed(2) },
+        backgroundColor: '#16161f',
+        borderColor: 'rgba(255,255,255,0.13)',
+        borderWidth: 1,
+        titleColor: '#6b6a72',
+        bodyColor: '#f0efe8',
+      }},
+      scales: {
+        x: { display: false },
+        y: {
+          display: true,
+          position: 'right',
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6b6a72', font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 3, callback: v => '$' + v.toFixed(2) }
+        }
+      }
+    }
+  });
+}
+
+function updateSparkline(price) {
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  priceHistory.push({ t: now, p: price });
+  if (priceHistory.length > 48) priceHistory.shift();
+  sparkChart.data.labels = priceHistory.map(h => h.t);
+  sparkChart.data.datasets[0].data = priceHistory.map(h => h.p);
+  sparkChart.update('none');
+}
+
+function fireConfetti() {
+  if (confettiFired) return;
+  confettiFired = true;
+  const colors = ['#3dd68c','#f5c842','#375bd2','#f0736a','#fff'];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}vw; background:${colors[Math.floor(Math.random()*colors.length)]}; animation-duration:${1.5+Math.random()*2}s; animation-delay:${Math.random()*0.8}s;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+  setTimeout(() => { confettiFired = false; }, 10000);
+}
+
+function checkWinner(sorted) {
+  const closest = sorted[0];
+  const gap = Math.abs(closest.pct);
+  const banner = document.getElementById('winner-banner');
+  const text = document.getElementById('winner-text');
+  if (gap <= 1) {
+    banner.style.display = 'flex';
+    text.innerHTML = `<span>${escHtml(closest.name)}</span> is within 1% of their target — so close!`;
+    fireConfetti();
+  } else if (gap <= 5) {
+    banner.style.display = 'flex';
+    text.innerHTML = `<span>${escHtml(closest.name)}</span> leads — only ${gap.toFixed(2)}% away from $${closest.target}`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function renderTable(price) {
+  const body = document.getElementById('predictions-body');
+  const withPct = predictions.map(p => ({ ...p, pct: ((p.target - price) / price) * 100, gap: p.target - price }));
+  const sorted = [...withPct].sort((a, b) => Math.abs(a.pct) - Math.abs(b.pct));
+  const n = sorted.length;
+
+  const currentRanks = {};
+  sorted.forEach((p, i) => { currentRanks[p.name] = i; });
+
+  checkWinner(sorted);
+
+  body.innerHTML = sorted.map((p, i) => {
+    const t = i / (n - 1);
+    const color = interpolateColor(t);
+    const sign = p.pct >= 0 ? '+' : '';
+    const pctStr = sign + p.pct.toFixed(2) + '%';
+    const gapStr = (p.gap >= 0 ? '+$' : '-$') + Math.abs(p.gap).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const targetStr = p.target < 1 ? '$' + p.target.toFixed(2) : '$' + p.target.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const isWinner = i === 0 && Math.abs(p.pct) <= 5;
+
+    let rankArrow = '';
+    if (previousRanks[p.name] !== undefined) {
+      const prev = previousRanks[p.name];
+      if (i < prev) rankArrow = `<span class="rank-arrow rank-up">▲${prev - i}</span>`;
+      else if (i > prev) rankArrow = `<span class="rank-arrow rank-down">▼${i - prev}</span>`;
+      else rankArrow = `<span class="rank-arrow rank-same">—</span>`;
+    }
+
+    return `<tr class="${isWinner ? 'winner-row' : ''}">
+      <td><div class="td-name">
+        <span class="color-dot" style="background:${color};"></span>
+        ${i === 0 ? '<span class="crown">👑</span>' : ''}
+        ${escHtml(p.name)}
+        ${rankArrow}
+      </div></td>
+      <td class="td-mono" style="color:var(--text);">${targetStr}</td>
+      <td class="td-mono" style="color:${color};">${gapStr}</td>
+      <td class="td-mono" style="color:${color};">${pctStr}</td>
+    </tr>`;
+  }).join('');
+
+  previousRanks = { ...currentRanks };
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function shareLink() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
+async function fetchPrice() {
+  try {
+    const res = await fetch('https://corsproxy.io/?https://api.coingecko.com/api/v3/simple/price?ids=chainlink&vs_currencies=usd&include_24hr_change=true');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const price = data.chainlink.usd;
+    const change = data.chainlink.usd_24h_change;
+    document.getElementById('price').textContent = '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const sign = change >= 0 ? '+' : '';
+    const changeEl = document.getElementById('change');
+    changeEl.textContent = `${sign}${change.toFixed(2)}% (24h)`;
+    changeEl.className = 'price-change ' + (change >= 0 ? 'up' : 'down');
+    const now = new Date().toLocaleTimeString();
+    document.getElementById('last-updated').textContent = now;
+    document.getElementById('footer-updated').textContent = now;
+    document.getElementById('error-banner').style.display = 'none';
+    updateSparkline(price);
+    renderTable(price);
+  } catch(e) { document.getElementById('error-banner').style.display = 'block'; }
+}
+
+initSparkline();
+fetchPrice();
+setInterval(fetchPrice, 30000);
+</script>
+</body>
+</html>
