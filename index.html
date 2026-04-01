@@ -37,13 +37,6 @@
   .pulse-row { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
   .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
   @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
-  .hl-row { margin-bottom: 12px; }
-  .hl-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-  .hl-bar { display: flex; align-items: center; gap: 10px; }
-  .hl-val { font-family: var(--mono); font-size: 9px; color: var(--muted); white-space: nowrap; }
-  .hl-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; position: relative; }
-  .hl-fill { position: absolute; height: 100%; border-radius: 2px; background: var(--accent); }
-  .hl-thumb { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--text); border: 2px solid var(--bg); top: -3px; transform: translateX(-50%); }
   .chart-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
   .chart-wrap { position: relative; width: 100%; height: 120px; }
   .winner-banner { background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.35); border-radius: 12px; padding: 0.9rem 1.25rem; margin-bottom: 1.5rem; display: none; align-items: center; gap: 12px; }
@@ -55,12 +48,15 @@
   table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-width: 520px; }
   thead tr { background: var(--surface2); border-bottom: 1px solid var(--border-bright); }
   th { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 9px 12px; text-align: left; font-weight: 400; white-space: nowrap; }
-  th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { text-align: right; }
+  th:nth-child(1) { text-align: center; width: 48px; }
+  td:nth-child(1) { text-align: center; width: 48px; }
+  th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5) { text-align: right; }
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: rgba(255,255,255,0.02); }
   tbody tr.winner-row { background: rgba(245,200,66,0.06); }
   td { padding: 10px 12px; font-size: 13px; }
+  .td-rank { font-size: 18px; line-height: 1; }
   .td-name { font-weight: 500; color: var(--text); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
   .td-mono { font-family: var(--mono); font-size: 12px; text-align: right; white-space: nowrap; }
   .color-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -133,26 +129,13 @@
       <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:5px;" id="last-updated">—</div>
     </div>
   </div>
-
-  <div class="hl-row">
-    <div class="hl-label">24h range</div>
-    <div class="hl-bar">
-      <span class="hl-val" id="hl-low">—</span>
-      <div class="hl-track">
-        <div class="hl-fill" id="hl-fill" style="width:0%"></div>
-        <div class="hl-thumb" id="hl-thumb" style="left:0%"></div>
-      </div>
-      <span class="hl-val" id="hl-high">—</span>
-    </div>
-  </div>
-
   <div class="chart-label">7-day price history</div>
   <div class="chart-wrap">
     <canvas id="chart7d"></canvas>
   </div>
 </div>
 
-<div class="section-label" style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-left:2px;">Price predictions</div>
+<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-left:2px;">Price predictions</div>
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:#3dd68c;"></div> Closest to current price</div>
   <div class="legend-item"><div class="legend-dot" style="background:#f0736a;"></div> Furthest from current price</div>
@@ -167,6 +150,7 @@
 <table>
   <thead>
     <tr>
+      <th>Rank</th>
       <th>Name</th>
       <th>Target</th>
       <th>$ gap</th>
@@ -174,7 +158,7 @@
     </tr>
   </thead>
   <tbody id="predictions-body">
-    <tr><td><span class="skeleton">Loading...</span></td><td><span class="skeleton">$——</span></td><td><span class="skeleton">$——</span></td><td><span class="skeleton">——%</span></td></tr>
+    <tr><td></td><td><span class="skeleton">Loading...</span></td><td><span class="skeleton">$——</span></td><td><span class="skeleton">$——</span></td><td><span class="skeleton">——%</span></td></tr>
   </tbody>
 </table>
 </div>
@@ -208,6 +192,8 @@ const PROXY = 'https://corsproxy.io/?';
 let previousRanks = {};
 let confettiFired = false;
 let chart7d = null;
+
+const RANK_EMOJI = ['🥇', '🥈', '🥉'];
 
 function interpolateColor(t) {
   const r = Math.round(0x3d + t * (0xf0 - 0x3d));
@@ -263,14 +249,6 @@ async function fetch7Day() {
   } catch(e) {}
 }
 
-function updateHLBar(low, high, current) {
-  document.getElementById('hl-low').textContent = '$' + low.toFixed(2);
-  document.getElementById('hl-high').textContent = '$' + high.toFixed(2);
-  const pct = Math.max(0, Math.min(100, ((current - low) / (high - low)) * 100));
-  document.getElementById('hl-fill').style.width = pct + '%';
-  document.getElementById('hl-thumb').style.left = pct + '%';
-}
-
 function fireConfetti() {
   if (confettiFired) return;
   confettiFired = true;
@@ -310,6 +288,7 @@ function renderTable(price) {
   const currentRanks = {};
   sorted.forEach((p, i) => { currentRanks[p.name] = i; });
   checkWinner(sorted);
+
   body.innerHTML = sorted.map((p, i) => {
     const t = i / (n - 1);
     const color = interpolateColor(t);
@@ -317,6 +296,8 @@ function renderTable(price) {
     const pctStr = sign + p.pct.toFixed(2) + '%';
     const gapStr = (p.gap >= 0 ? '+$' : '-$') + Math.abs(p.gap).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const targetStr = p.target < 1 ? '$' + p.target.toFixed(2) : '$' + p.target.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const rankEmoji = i < 3 ? RANK_EMOJI[i] : '💩';
+
     let rankArrow = '';
     if (previousRanks[p.name] !== undefined) {
       const prev = previousRanks[p.name];
@@ -324,10 +305,11 @@ function renderTable(price) {
       else if (i > prev) rankArrow = `<span class="rank-arrow rank-down">▼${i - prev}</span>`;
       else rankArrow = `<span class="rank-arrow rank-same">—</span>`;
     }
+
     return `<tr class="${i === 0 && Math.abs(p.pct) <= 5 ? 'winner-row' : ''}">
+      <td class="td-rank">${rankEmoji}</td>
       <td><div class="td-name">
         <span class="color-dot" style="background:${color};"></span>
-        ${i === 0 ? '<span style="font-size:13px;">👑</span>' : ''}
         ${escHtml(p.name)}
         ${rankArrow}
       </div></td>
@@ -336,6 +318,7 @@ function renderTable(price) {
       <td class="td-mono" style="color:${color};">${pctStr}</td>
     </tr>`;
   }).join('');
+
   previousRanks = { ...currentRanks };
 }
 
@@ -351,7 +334,7 @@ function shareLink() {
 
 async function fetchPrice() {
   try {
-    const res = await fetch(PROXY + 'https://api.coingecko.com/api/v3/simple/price?ids=chainlink&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_high_24h=true&include_low_24h=true');
+    const res = await fetch(PROXY + 'https://api.coingecko.com/api/v3/simple/price?ids=chainlink&vs_currencies=usd&include_24hr_change=true');
     if (!res.ok) throw new Error();
     const data = await res.json();
     const d = data.chainlink;
@@ -366,7 +349,6 @@ async function fetchPrice() {
     document.getElementById('last-updated').textContent = now;
     document.getElementById('footer-updated').textContent = now;
     document.getElementById('error-banner').style.display = 'none';
-    if (d.usd_24h_low && d.usd_24h_high) updateHLBar(d.usd_24h_low, d.usd_24h_high, price);
     renderTable(price);
   } catch(e) { document.getElementById('error-banner').style.display = 'block'; }
 }
