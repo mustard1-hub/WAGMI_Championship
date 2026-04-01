@@ -11,7 +11,7 @@
   :root {
     --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
     --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
-    --text: #f0efe8; --muted: #6b6a72; --accent: #375bd2;
+    --text: #f0efe8; --muted: #9d9baa; --accent: #375bd2;
     --green: #3dd68c; --red: #f0736a; --gold: #f5c842;
     --mono: 'Space Mono', monospace; --sans: 'DM Sans', sans-serif;
   }
@@ -225,8 +225,8 @@ function initChart() {
         backgroundColor: '#16161f', borderColor: 'rgba(255,255,255,0.13)', borderWidth: 1, titleColor: '#6b6a72', bodyColor: '#f0efe8',
       }},
       scales: {
-        x: { display: true, grid: { display: false }, ticks: { color: '#6b6a72', font: { size: 9 }, maxTicksLimit: 7, maxRotation: 0 } },
-        y: { display: true, position: 'right', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b6a72', font: { size: 9 }, maxTicksLimit: 4, callback: v => '$' + v.toFixed(2) } }
+      x: { display: true, grid: { display: false }, ticks: { color: '#9d9baa', font: { size: 11 }, maxTicksLimit: 7, maxRotation: 0, autoSkip: false } },
+       y: { display: true, position: 'right', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9d9baa', font: { size: 11 }, maxTicksLimit: 4, callback: v => '$' + v.toFixed(2) } }
       }
     }
   });
@@ -240,10 +240,7 @@ async function fetch7Day() {
     const prices = data.prices;
     const labels = prices.map(p => new Date(p[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     const vals = prices.map(p => p[1]);
-    const dedupLabels = [];
-    let last = '';
-    labels.forEach(l => { dedupLabels.push(l !== last ? l : ''); last = l; });
-    chart7d.data.labels = dedupLabels;
+    chart7d.data.labels = labels;
     chart7d.data.datasets[0].data = vals;
     chart7d.update('none');
   } catch(e) {}
